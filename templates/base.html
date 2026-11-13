@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Slice{% endblock %}</title>
+  <title>{% block title %}Classroom Vacancy Finder{% endblock %}</title>
   <style>
     :root {
       --bg: #fffaf0;        /* cream crust */
@@ -90,7 +90,7 @@
 </head>
 <body>
   <nav>
-    <span class="brand">🍕 Slice</span>
+    <span class="brand">Classroom Vacancy Finder</span>
     {% if user.is_authenticated %}
       <a href="{% url 'dashboard_redirect' %}">Dashboard</a>
       <a href="{% url 'profile' %}">Profile</a>
