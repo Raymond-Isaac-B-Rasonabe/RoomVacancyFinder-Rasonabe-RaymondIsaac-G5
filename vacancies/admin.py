@@ -6,7 +6,5 @@ admin.site.register(VacancyReport)
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("name", "building", "floor", "room_type", "is_accessible")
-    list_filter = ("building", "room_type")
-    
-# Register your models here.
+    list_display = ("name", "building", "floor", "is_accessible")
+    list_filter = ("building",)

@@ -32,14 +32,6 @@ def dashboard_redirect(request):
         return redirect("admin_dashboard")
     return redirect("user_dashboard")
 
-@role_required("student", "staff")
-def user_dashboard(request):
-    return render(request, "user_dashboard.html")
-
-@role_required("admin")
-def admin_dashboard(request):
-    return render(request, "admin_dashboard.html", {"user_count": User.objects.count()})
-
 @login_required
 def profile(request):
     return render(request, "profile.html")

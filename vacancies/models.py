@@ -1,22 +1,17 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 class Building(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=True)   # False for NGE, Gymnasium, renovations
-
+    is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.name
 
 class Room(models.Model):
-    class RoomType(models.TextChoices):
-        AIRCON = "aircon", "Air-conditioned"
-        OPEN = "open", "Open-windowed"
-
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="rooms")
     floor = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=50)
-    room_type = models.CharField(max_length=10, choices=RoomType.choices)
     is_accessible = models.BooleanField(default=True)
 
     class Meta:
@@ -27,10 +22,16 @@ class Room(models.Model):
         return f"{self.building.name} {self.name}"
 
 class VacancyReport(models.Model):
+    class RoomType(models.TextChoices):
+        AIRCON = "aircon", "Air-conditioned"
+        OPEN = "open", "Open-windowed"
+
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="reports")
     reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                  related_name="vacancy_reports")
+    room_type = models.CharField(max_length=10, choices=RoomType.choices, default=RoomType.AIRCON)
     is_vacant = models.BooleanField(default=True)
+    date = models.DateField(default=timezone.localdate)
     slot_start = models.TimeField()
     slot_end = models.TimeField()
     notes = models.CharField(max_length=200, blank=True)

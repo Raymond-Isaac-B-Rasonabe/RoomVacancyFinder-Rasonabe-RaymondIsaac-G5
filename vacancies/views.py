@@ -1,43 +1,51 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
+from django.utils import timezone as dj_timezone
 from django.views.decorators.http import require_POST
 from accounts.decorators import role_required
-from .forms import ReportForm
-from .models import Building, Room, VacancyReport
+from .forms import ReportForm, SearchForm
+from .models import VacancyReport
+
 
 @login_required
 def search(request):
-    now = timezone.localtime()
-    building = request.GET.get("building") or None
-    floor = request.GET.get("floor") or None
-    room_type = request.GET.get("room_type") or None
+    form = SearchForm(request.GET or None)
+    data = form.cleaned_data if form.is_valid() else {}
+    day = data.get("date") or dj_timezone.localdate()
+    at = data.get("time")
 
-    rooms = Room.objects.filter(building__is_active=True, is_accessible=True)
-    if building:
-        rooms = rooms.filter(building_id=building)
-    if floor and floor.isdigit():
-        rooms = rooms.filter(floor=int(floor))
-    if room_type:
-        rooms = rooms.filter(room_type=room_type)
+    reports = VacancyReport.objects.filter(
+        date=day,
+        room__building__is_active=True,
+        room__is_accessible=True,
+    ).select_related("room__building", "reporter")
 
-    reports = (VacancyReport.objects
-               .filter(room__in=rooms, created_at__date=now.date(),
-                       slot_start__lte=now.time(), slot_end__gte=now.time())
-               .select_related("room__building", "reporter")
-               .order_by("room_id", "-created_at"))
+    if data.get("building"):
+        reports = reports.filter(room__building=data["building"])
+    if data.get("floor") is not None:
+        reports = reports.filter(room__floor=data["floor"])
+    if data.get("room_type"):
+        reports = reports.filter(room_type=data["room_type"])
+    if at:
+        reports = reports.filter(slot_start__lte=at, slot_end__gte=at)
 
-    latest = {}
-    for r in reports:                       # newest first, so the first one seen is the latest
-        latest.setdefault(r.room_id, r)
-    results = [r for r in latest.values() if r.is_vacant]
+    reports = reports.order_by("room_id", "-created_at")
+
+    results, seen = [], set()
+    for r in reports:                  # newest first
+        if at:                         # with a time, only the latest report per room counts
+            if r.room_id in seen:
+                continue
+            seen.add(r.room_id)
+        if r.is_vacant:
+            results.append(r)
+    results.sort(key=lambda r: (r.room.building.name, r.room.floor, r.room.name, r.slot_start))
 
     return render(request, "search.html", {
-        "results": results,
-        "buildings": Building.objects.filter(is_active=True),
-        "room_types": Room.RoomType.choices,
+        "form": form, "results": results, "day": day, "at": at,
     })
+
 
 @role_required("student", "staff")
 def report_create(request):
@@ -52,6 +60,7 @@ def report_create(request):
         messages.error(request, "Please fix the errors below.")
     return render(request, "form.html", {"form": form, "title": "Report a room"})
 
+
 @role_required("student", "staff")
 def report_edit(request, pk):
     report = get_object_or_404(VacancyReport, pk=pk, reporter=request.user)   # own reports only
@@ -64,6 +73,7 @@ def report_edit(request, pk):
         messages.error(request, "Please fix the errors below.")
     return render(request, "form.html", {"form": form, "title": "Edit report"})
 
+
 @login_required
 @require_POST
 def report_delete(request, pk):
@@ -75,5 +85,3 @@ def report_delete(request, pk):
     report.delete()
     messages.success(request, "Report deleted.")
     return redirect("dashboard_redirect")
-
-# Create your views here.

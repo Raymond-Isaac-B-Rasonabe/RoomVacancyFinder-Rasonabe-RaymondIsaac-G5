@@ -1,6 +1,28 @@
-from datetime import time, timezone
+from datetime import time
 from django import forms
-from .models import Room, VacancyReport
+from django.utils import timezone
+from .models import Building, Room, VacancyReport
+
+
+class SearchForm(forms.Form):
+    building = forms.ModelChoiceField(
+        queryset=Building.objects.filter(is_active=True),
+        required=False,
+        empty_label="All buildings",
+    )
+    floor = forms.IntegerField(required=False, min_value=0)
+    room_type = forms.ChoiceField(
+        choices=[("", "Any type")] + list(VacancyReport.RoomType.choices),
+        required=False,
+    )
+    date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+    )
+    time = forms.TimeField(
+        required=False,
+        widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
+    )
 
 class ReportForm(forms.ModelForm):
     date_mode = forms.ChoiceField(
