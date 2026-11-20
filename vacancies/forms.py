@@ -1,24 +1,56 @@
-from datetime import time
+from datetime import time, timezone
 from django import forms
 from .models import Room, VacancyReport
 
 class ReportForm(forms.ModelForm):
+    date_mode = forms.ChoiceField(
+        label="Date",
+        choices=[("auto", "Today (automatic)"), ("manual", "Choose a date")],
+        widget=forms.RadioSelect,
+        initial="auto",
+    )
+
+    field_order = ["room", "room_type", "is_vacant", "date_mode", "date",
+                   "slot_start", "slot_end", "notes"]
+
     class Meta:
         model = VacancyReport
-        fields = ("room", "is_vacant", "slot_start", "slot_end", "notes")
+        fields = ("room", "room_type", "is_vacant", "date", "slot_start", "slot_end", "notes")
+        labels = {
+            "room_type": "Room type",
+            "is_vacant": "Room is vacant",
+            "date": "Pick a date",
+            "slot_start": "From",
+            "slot_end": "Until",
+        }
+        help_texts = {"date": "Only used if you chose “Choose a date”."}
         widgets = {
+            "date": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
             "slot_start": forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
             "slot_end": forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["date"].required = False
         self.fields["room"].queryset = Room.objects.filter(
             building__is_active=True, is_accessible=True
         ).select_related("building")
+        if self.instance.pk:                     # editing: show the saved date
+            self.initial["date_mode"] = "manual"
 
     def clean(self):
         data = super().clean()
+        mode = data.get("date_mode")
+        if mode == "auto":
+            data["date"] = timezone.localdate()
+        elif mode == "manual":
+            day = data.get("date")
+            if not day:
+                self.add_error("date", "Pick a date, or choose “Today (automatic)”.")
+            elif day < timezone.localdate():
+                self.add_error("date", "The date can't be in the past.")
+
         start, end = data.get("slot_start"), data.get("slot_end")
         if start and end:
             if start >= end:
