@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from .decorators import role_required
 from .forms import SignUpForm, ProfileForm
 from .models import User
+from vacancies.models import VacancyReport
 
 def signup(request):
     form = SignUpForm(request.POST or None)
