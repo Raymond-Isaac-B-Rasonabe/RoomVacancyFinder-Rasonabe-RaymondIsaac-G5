@@ -4,109 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Classroom Vacancy Finder{% endblock %}</title>
-  <style>
-    :root {
-      --bg: #fffaf0;        /* cream crust */
-      --text: #2b1d16;
-      --card: #ffffff;
-      --accent: #d62f1f;    /* tomato */
-      --accent-text: #ffffff;
-      --green: #2f7d32;     /* basil */
-      --border: #eadfce;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1b1410;
-        --text: #f6ecdf;
-        --card: #261c16;
-        --accent: #ef4a38;
-        --green: #6fbf73;
-        --border: #3a2c23;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem 1.5rem;
-      border-bottom: 2px solid var(--accent);
-      background: var(--card);
-    }
-    nav .brand {
-      font-weight: 700;
-      font-size: 1.2rem;
-      margin-right: auto;
-    }
-    nav a { color: var(--text); text-decoration: none; }
-    nav a:hover { color: var(--accent); }
-    main {
-      max-width: 40rem;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    h1 { margin-top: 0; }
-    form p { margin: 0 0 1rem; }
-    label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
-    input, select, textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--card);
-      color: var(--text);
-      font: inherit;
-    }
-    button {
-      padding: 0.5rem 1rem;
-      border: 0;
-      border-radius: 6px;
-      background: var(--accent);
-      color: var(--accent-text);
-      font: inherit;
-      cursor: pointer;
-    }
-    button:hover { opacity: 0.9; }
-    nav form { display: inline; margin: 0; }
-    .helptext, .errorlist { font-size: 0.85rem; }
-    .errorlist { color: var(--accent); padding-left: 1rem; }
-    .messages p {
-      margin: 0 0 0.5rem;
-      padding: 0.6rem 0.9rem;
-      border-radius: 6px;
-      background: var(--card);
-      border-left: 4px solid var(--border);
-    }
-    .messages p.success { border-left-color: var(--green); }
-    .messages p.error { border-left-color: var(--accent); }
+<style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f7f4ea; color: #1f2a24; }
+    nav { display: flex; gap: 1rem; align-items: center; padding: 0.75rem 1.5rem; background: #2f4f3e; }
+    nav a { color: #f4f1e8; text-decoration: none; }
+    nav .brand { margin-right: auto; font-weight: bold; }
+    nav form { margin: 0; }
+    main { max-width: 36rem; margin: 2rem auto; padding: 0 1rem; }
+    label { display: block; font-weight: bold; }
+    input { width: 100%; padding: 0.5rem; margin-bottom: 0.75rem; }
+    button { padding: 0.5rem 1rem; border: 0; border-radius: 4px; background: #f2b705; cursor: pointer; }
+    .errorlist { color: #c8402f; }
+    .error { color: #c8402f; }
+    .success { color: #2e7d4f; }
   </style>
 </head>
 <body>
   <nav>
-    <span class="brand">Classroom Vacancy Finder</span>
+    <span class="brand">Classroom Finder</span>
     {% if user.is_authenticated %}
       <a href="{% url 'dashboard_redirect' %}">Dashboard</a>
       <a href="{% url 'profile' %}">Profile</a>
-      <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}<button>Log out</button>
-      </form>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>Log out</button></form>
     {% else %}
       <a href="{% url 'login' %}">Log in</a>
       <a href="{% url 'signup' %}">Sign up</a>
     {% endif %}
   </nav>
-
   <main>
-    <div class="messages">
-      {% for m in messages %}<p class="{{ m.tags }}">{{ m }}</p>{% endfor %}
-    </div>
+    {% for m in messages %}<p class="{{ m.tags }}">{{ m }}</p>{% endfor %}
     {% block content %}{% endblock %}
   </main>
 </body>
