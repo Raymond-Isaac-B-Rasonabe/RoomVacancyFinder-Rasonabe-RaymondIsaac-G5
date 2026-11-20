@@ -1,6 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Admin dashboard</h1>
-<p>Registered users: {{ user_count }}</p>
-<p><a href="/admin/">Open Django admin</a></p>
+<p>Registered users: {{ user_count }} · <a href="/admin/">Manage buildings and rooms</a></p>
+
+<h2>All vacancy reports</h2>
+<table>
+  <tr><th>Room</th><th>Status</th><th>Time slot</th><th>Reporter</th><th></th></tr>
+  {% for r in reports %}
+  <tr>
+    <td>{{ r.room }}</td>
+    <td>{% if r.is_vacant %}Vacant{% else %}Occupied{% endif %}</td>
+    <td>{{ r.slot_start|time:"g:i A" }} – {{ r.slot_end|time:"g:i A" }}</td>
+    <td>{{ r.reporter.username }}</td>
+    <td>
+      <form method="post" action="{% url 'report_delete' r.pk %}" style="display:inline"
+            onsubmit="return confirm('Delete this report?')">{% csrf_token %}<button>Delete</button></form>
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="5">No reports yet.</td></tr>
+  {% endfor %}
+</table>
 {% endblock %}

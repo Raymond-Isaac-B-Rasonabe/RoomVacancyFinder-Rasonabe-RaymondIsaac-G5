@@ -53,3 +53,17 @@ def profile_edit(request):
             return redirect("profile")
         messages.error(request, "Please fix the errors below.")
     return render(request, "form.html", {"form": form, "title": "Edit profile"})
+
+@role_required("student", "staff")
+def user_dashboard(request):
+    reports = (VacancyReport.objects.filter(reporter=request.user)
+               .select_related("room__building"))
+    return render(request, "user_dashboard.html", {"reports": reports})
+
+@role_required("admin")
+def admin_dashboard(request):
+    reports = VacancyReport.objects.select_related("room__building", "reporter")[:50]
+    return render(request, "admin_dashboard.html", {
+        "user_count": User.objects.count(),
+        "reports": reports,
+    })

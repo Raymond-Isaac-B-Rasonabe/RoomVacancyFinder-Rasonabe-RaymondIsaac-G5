@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Vacant rooms right now</h1>
+<form method="get">
+  <select name="building">
+    <option value="">All buildings</option>
+    {% for b in buildings %}<option value="{{ b.id }}">{{ b.name }}</option>{% endfor %}
+  </select>
+  <input type="number" name="floor" placeholder="Floor" min="0">
+  <select name="room_type">
+    <option value="">Any type</option>
+    {% for value, label in room_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+  </select>
+  <button>Search</button>
+</form>
+
+<table>
+  <tr><th>Room</th><th>Floor</th><th>Type</th><th>Vacant</th><th>Reported by</th></tr>
+  {% for r in results %}
+  <tr>
+    <td>{{ r.room }}</td>
+    <td>{{ r.room.floor }}</td>
+    <td>{{ r.room.get_room_type_display }}</td>
+    <td>{{ r.slot_start|time:"g:i A" }} – {{ r.slot_end|time:"g:i A" }}</td>
+    <td>{{ r.reporter.username }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="5">No vacant rooms reported right now.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
