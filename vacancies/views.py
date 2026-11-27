@@ -49,7 +49,7 @@ def search(request):
 
 @role_required("student", "staff")
 def report_create(request):
-    form = ReportForm(request.POST or None, reporter=request.user)
+    form = ReportForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
             report = form.save(commit=False)
@@ -64,7 +64,7 @@ def report_create(request):
 @role_required("student", "staff")
 def report_edit(request, pk):
     report = get_object_or_404(VacancyReport, pk=pk, reporter=request.user)   # own reports only
-    form = ReportForm(request.POST or None, instance=report, reporter=request.user)
+    form = ReportForm(request.POST or None, instance=report)
     if request.method == "POST":
         if form.is_valid():
             form.save()

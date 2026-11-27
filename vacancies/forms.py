@@ -4,9 +4,6 @@ from django.utils import timezone
 from .models import Building, Room, VacancyReport
 
 
-OVERLAP_MSG = "This report overlaps an existing report for the same room and time."
-
-
 class SearchForm(forms.Form):
     building = forms.ModelChoiceField(
         queryset=Building.objects.filter(is_active=True),
@@ -56,7 +53,6 @@ class ReportForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        self.reporter = kwargs.pop("reporter", None)
         super().__init__(*args, **kwargs)
         self.fields["date"].required = False
         self.fields["room"].queryset = Room.objects.filter(
@@ -83,20 +79,4 @@ class ReportForm(forms.ModelForm):
                 raise forms.ValidationError("Start time must be before end time.")
             if start < time(8, 0) or end > time(19, 0):
                 raise forms.ValidationError("Times must be between 8:00 AM and 7:00 PM.")
-
-        room = data.get("room")
-        day = data.get("date")
-        reporter = self.reporter or getattr(self.instance, "reporter", None)
-        if room and day and start and end and reporter and reporter.pk:
-            overlaps = VacancyReport.objects.filter(
-                room=room,
-                reporter=reporter,
-                date=day,
-                slot_start__lt=end,
-                slot_end__gt=start,
-            )
-            if self.instance.pk:
-                overlaps = overlaps.exclude(pk=self.instance.pk)
-            if overlaps.exists():
-                raise forms.ValidationError(OVERLAP_MSG)
         return data
