@@ -28,7 +28,11 @@ SECRET_KEY = 'django-insecure-(k$2&flu0vwd_6&cwgj4c1106_bp40m%fbfw3pn7eeu0(@1!=)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = (
+    ["*"]
+    if DEBUG
+    else [host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()]
+)
 
 
 # Application definition
@@ -41,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "accounts",
+    "vacancies",
 ]
 
 MIDDLEWARE = [
@@ -86,7 +91,7 @@ DATABASES = {
     "default": dj_database_url.config(
         default=os.getenv("DATABASE_URL"),
         conn_max_age=600,
-        ssl_require=True,
+        ssl_require=bool(os.getenv("DATABASE_URL", "").startswith(("postgres://", "postgresql://"))),
     )
 }
 
