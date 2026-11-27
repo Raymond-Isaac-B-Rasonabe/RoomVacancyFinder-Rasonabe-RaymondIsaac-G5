@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+  <h1>404 - Page Not Found</h1>
+  <p>The page you requested does not exist.</p>
+  <p><a href="{% url 'search' %}">Return to Find Rooms</a></p>
+{% endblock %}
