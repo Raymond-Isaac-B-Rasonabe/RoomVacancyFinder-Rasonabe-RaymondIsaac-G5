@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from .decorators import role_required
 from .forms import SignUpForm, ProfileForm
 from .models import User
+from vacancies.models import VacancyReport
 
 def signup(request):
     form = SignUpForm(request.POST or None)
@@ -31,14 +32,6 @@ def dashboard_redirect(request):
         return redirect("admin_dashboard")
     return redirect("user_dashboard")
 
-@role_required("student", "staff")
-def user_dashboard(request):
-    return render(request, "user_dashboard.html")
-
-@role_required("admin")
-def admin_dashboard(request):
-    return render(request, "admin_dashboard.html", {"user_count": User.objects.count()})
-
 @login_required
 def profile(request):
     return render(request, "profile.html")
@@ -53,3 +46,17 @@ def profile_edit(request):
             return redirect("profile")
         messages.error(request, "Please fix the errors below.")
     return render(request, "form.html", {"form": form, "title": "Edit profile"})
+
+@role_required("student", "staff")
+def user_dashboard(request):
+    reports = (VacancyReport.objects.filter(reporter=request.user)
+               .select_related("room__building"))
+    return render(request, "user_dashboard.html", {"reports": reports})
+
+@role_required("admin")
+def admin_dashboard(request):
+    reports = VacancyReport.objects.select_related("room__building", "reporter")[:50]
+    return render(request, "admin_dashboard.html", {
+        "user_count": User.objects.count(),
+        "reports": reports,
+    })
